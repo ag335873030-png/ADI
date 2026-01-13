@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StudyFlow Master | הלו"ז המנצח שלך</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Assistant', sans-serif; background-color: #f3f4f6; }
+        .day-column { background: rgba(255, 255, 255, 0.5); border-radius: 1.5rem; min-height: 400px; }
+        .task-card { transition: transform 0.2s; position: relative; }
+        .task-card:hover { transform: scale(1.02); }
+        .priority-1 { border-right: 6px solid #ef4444; } /* מבחן */
+        .priority-2 { border-right: 6px solid #3b82f6; } /* עבודה/לימודים */
+        .priority-3 { border-right: 6px solid #10b981; } /* חיים/פנאי */
+    </style>
+</head>
+<body class="p-4 bg-slate-50">
+
+    <div class="max-w-7xl mx-auto">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-slate-900">Relax<span class="text-blue-600">Week</span> AI</h1>
+            <p class="text-slate-500 font-medium">האלגוריתם בונה לך את השבוע האידיאלי</p>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            
+            <div class="space-y-4">
+                <div class="bg-white p-6 rounded-3xl shadow-lg border border-blue-100">
+                    <h3 class="font-bold mb-4 text-blue-900">הוספה מהירה</h3>
+                    <div class="space-y-3">
+                        <input type="text" id="tTitle" placeholder="מה המשימה?" class="w-full p-3 bg-slate-100 rounded-xl outline-none focus:ring-2 focus:ring-blue-400">
+                        <select id="tDay" class="w-full p-3 bg-slate-100 rounded-xl">
+                            <option value="1">יום ראשון</option>
+                            <option value="2">יום שני</option>
+                            <option value="3">יום שלישי</option>
+                            <option value="4">יום רביעי</option>
+                            <option value="5">יום חמישי</option>
+                        </select>
+                        <select id="tType" class="w-full p-3 bg-slate-100 rounded-xl">
+                            <option value="exam">מבחן ⚠️</option>
+                            <option value="homework">שיעורי בית/עבודה 📝</option>
+                            <option value="life">סידור/ניקיון 🏠</option>
+                            <option value="sport">כושר 🏃</option>
+                            <option value="social">חברים/פנאי ✨</option>
+                        </select>
+                        <button onclick="addTask()" class="w-full py-3 bg-blue-600 text-white rounded-xl font-bold shadow-md hover:bg-blue-700">תכנן לי את השבוע</button>
+                    </div>
+                </div>
+
+                <div id="daily-summary" class="bg-indigo-900 text-white p-6 rounded-3xl shadow-xl hidden">
+                    <h3 class="font-bold mb-3 flex items-center gap-2 text-indigo-200 text-lg">
+                        <span>📋</span> סיכום יום חכם
+                    </h3>
+                    <div id="summary-content" class="text-sm space-y-4 leading-relaxed">
+                        </div>
+                </div>
+            </div>
+
+            <div class="lg:col-span-3">
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                    <div id="col-1" class="day-column p-3 bg-white shadow-sm border border-slate-200">
+                        <h4 class="text-center font-bold mb-4 py-2 border-b border-slate-100 text-blue-800 uppercase">ראשון</h4>
+                        <div class="task-list space-y-3"></div>
+                    </div>
+                    <div id="col-2" class="day-column p-3 bg-white shadow-sm border border-slate-200">
+                        <h4 class="text-center font-bold mb-4 py-2 border-b border-slate-100 text-blue-800 uppercase">שני</h4>
+                        <div class="task-list space-y-3"></div>
+                    </div>
+                    <div id="col-3" class="day-column p-3 bg-white shadow-sm border border-slate-200">
+                        <h4 class="text-center font-bold mb-4 py-2 border-b border-slate-100 text-blue-800 uppercase">שלישי</h4>
+                        <div class="task-list space-y-3"></div>
+                    </div>
+                    <div id="col-4" class="day-column p-3 bg-white shadow-sm border border-slate-200">
+                        <h4 class="text-center font-bold mb-4 py-2 border-b border-slate-100 text-blue-800 uppercase">רביעי</h4>
+                        <div class="task-list space-y-3"></div>
+                    </div>
+                    <div id="col-5" class="day-column p-3 bg-white shadow-sm border border-slate-200">
+                        <h4 class="text-center font-bold mb-4 py-2 border-b border-slate-100 text-blue-800 uppercase">חמישי</h4>
+                        <div class="task-list space-y-3"></div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        let allTasks = [];
+
+        function addTask() {
+            const title = document.getElementById('tTitle').value;
+            const day = parseInt(document.getElementById('tDay').value);
+            const type = document.getElementById('tType').value;
+
+            if(!title) return;
+
+            // Define Priority and Duration
+            let p = 3; let duration = 30; let tip = "";
+            if(type === 'exam') { p = 1; duration = 120; tip = "לחלק ל-4 סטים של 25 דקות. המבחן הוא המשימה הכי חשובה היום."; }
+            else if(type === 'homework') { p = 2; duration = 45; tip = "כדאי להתחיל עם החלק הקל כדי להיכנס ל'שוונג'."; }
+            else if(type === 'sport') { p = 3; duration = 40; tip = "אימון משחרר דופמין שיעזור לך ללמוד טוב יותר אחרי זה."; }
+            else if(type === 'social') { p = 3; duration = 90; tip = "זמן מטעין. אל תרגישי אשמה, זה חלק מההצלחה!"; }
+            else { p = 3; duration = 20; tip = "חדר מסודר מפחית לחץ באופן תת-מודע."; }
+
+            allTasks.push({ id: Date.now(), title, day, type, p, duration, tip });
+            
+            // Re-sort by Priority
+            allTasks.sort((a, b) => a.p - b.p);
+            
+            updateBoard();
+            generateDailySummary(day);
+            document.getElementById('tTitle').value = '';
+        }
+
+        function updateBoard() {
+            // Clear lists
+            document.querySelectorAll('.task-list').forEach(list => list.innerHTML = '');
+
+            allTasks.forEach(task => {
+                const col = document.querySelector(`#col-${task.day} .task-list`);
+                const card = document.createElement('div');
+                card.className = `task-card priority-${task.p} bg-white p-3 rounded-xl shadow-sm border border-slate-100 cursor-pointer hover:bg-slate-50 transition`;
+                card.innerHTML = `
+                    <div class="text-xs font-bold text-slate-400 mb-1">${task.duration} דקות</div>
+                    <div class="font-bold text-slate-800 leading-tight">${task.title}</div>
+                    <div class="mt-2 text-[10px] text-blue-600 italic bg-blue-50 p-1 rounded font-medium">💡 ${task.tip}</div>
+                `;
+                col.appendChild(card);
+            });
+        }
+
+        function generateDailySummary(activeDay) {
+            const dayTasks = allTasks.filter(t => t.day === activeDay);
+            const summaryDiv = document.getElementById('daily-summary');
+            const content = document.getElementById('summary-content');
+            
+            if(dayTasks.length === 0) return;
+
+            summaryDiv.classList.remove('hidden');
+            
+            let totalStudy = dayTasks.filter(t => t.p < 3).reduce((sum, t) => sum + t.duration, 0);
+            let totalFun = dayTasks.filter(t => t.p === 3).reduce((sum, t) => sum + t.duration, 0);
+
+            let recommendation = "";
+            if(totalStudy > 120) recommendation = "יום עמוס לפנינו! כדאי להתחיל ללמוד כבר ב-16:00 כדי לסיים בערב בכיף.";
+            else recommendation = "יום מאוזן מאוד. נסי לשלב את הספורט/חברים מיד אחרי הלימודים.";
+
+            content.innerHTML = `
+                <div class="bg-indigo-800/50 p-3 rounded-xl border border-indigo-400/30">
+                    <strong>סה"כ למידה:</strong> ${totalStudy} דקות<br>
+                    <strong>סה"כ פנאי:</strong> ${totalFun} דקות
+                </div>
+                <p class="border-r-2 border-indigo-400 pr-2">${recommendation}</p>
+                <div class="text-xs text-indigo-200 bg-white/10 p-2 rounded">
+                    <strong>סדר מומלץ:</strong><br>
+                    ${dayTasks.map((t, i) => `${i+1}. ${t.title}`).join('<br>')}
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>
